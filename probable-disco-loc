@@ -1,0 +1,44 @@
+# probable-disco: Safe Instagram location analyzer
+# Requires Python 3, requests library, and Instagram Graph API token
+
+import requests
+
+ACCESS_TOKEN = "YOUR_ACCESS_TOKEN"  # Get this from Instagram Graph API
+USERNAME = "instagram_username_here"
+
+# Step 1: Get user ID from username
+def get_user_id(username):
+    url = f"https://graph.instagram.com/v15.0/{username}?fields=id,username&access_token={ACCESS_TOKEN}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json().get("id")
+    else:
+        print("Error getting user ID:", response.text)
+        return None
+
+# Step 2: Get recent media
+def get_user_media(user_id):
+    url = f"https://graph.instagram.com/{user_id}/media?fields=id,caption,media_url,timestamp,permalink,location&access_token={ACCESS_TOKEN}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json().get("data", [])
+    else:
+        print("Error getting media:", response.text)
+        return []
+
+# Step 3: Analyze locations
+def analyze_locations(media_list):
+    locations = []
+    for media in media_list:
+        if "location" in media and media["location"]:
+            locations.append(media["location"])
+    return locations
+
+if __name__ == "__main__":
+    user_id = get_user_id(USERNAME)
+    if user_id:
+        media_list = get_user_media(user_id)
+        locations = analyze_locations(media_list)
+        print(f"Public locations tagged by {USERNAME}:")
+        for loc in locations:
+            print(loc)
