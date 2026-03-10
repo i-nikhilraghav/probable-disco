@@ -1,0 +1,73 @@
+# probable-disco: Safe Instagram location and profile update tracker
+# Requires Python 3, requests library, and Instagram Graph API token
+
+import requests
+import time
+
+ACCESS_TOKEN = "YOUR_ACCESS_TOKEN"  # Get this from Instagram Graph API
+USERNAME = "instagram_username_here"
+CHECK_INTERVAL = 60  # seconds between update checks
+
+# Step 1: Get user ID from username
+def get_user_id(username):
+    url = f"https://graph.instagram.com/v15.0/{username}?fields=id,username&access_token={ACCESS_TOKEN}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json().get("id")
+    else:
+        print("Error getting user ID:", response.text)
+        return None
+
+# Step 2: Get recent media
+def get_user_media(user_id):
+    url = f"https://graph.instagram.com/{user_id}/media?fields=id,caption,media_url,timestamp,permalink,location&access_token={ACCESS_TOKEN}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json().get("data", [])
+    else:
+        print("Error getting media:", response.text)
+        return []
+
+# Step 3: Analyze locations
+def analyze_locations(media_list):
+    locations = []
+    for media in media_list:
+        if "location" in media and media["location"]:
+            locations.append(media["location"])
+    return locations
+
+# Step 4: Track updates
+def track_updates(user_id, known_post_ids):
+    media_list = get_user_media(user_id)
+    new_posts = []
+    for media in media_list:
+        if media["id"] not in known_post_ids:
+            new_posts.append(media)
+            known_post_ids.add(media["id"])
+    return new_posts
+
+if __name__ == "__main__":
+    user_id = get_user_id(USERNAME)
+    if user_id:
+        print(f"Tracking public updates for @{USERNAME}...\n")
+        known_posts = set()
+        
+        # Initialize known posts
+        media_list = get_user_media(user_id)
+        for media in media_list:
+            known_posts.add(media["id"])
+        
+        # Start monitoring loop
+        while True:
+            new_posts = track_updates(user_id, known_posts)
+            if new_posts:
+                print(f"Found {len(new_posts)} new post(s)!\n")
+                for post in new_posts:
+                    print(f"- {post['timestamp']}: {post.get('caption', 'No caption')} | {post['permalink']}")
+                    if "location" in post and post["location"]:
+                        print(f"  Location: {post['location']}")
+                print("\n")
+            else:
+                print("No new posts detected.")
+            
+            time.sleep(CHECK_INTERVAL)
