@@ -1,0 +1,17 @@
+✅ Features Added
+
+Profile Update Tracker:
+
+Monitors a public Instagram account for new posts.
+
+Prints new posts with caption, timestamp, permalink, and location (if tagged).
+
+Safe & Legal:
+
+Only tracks public posts from accounts that give API access.
+
+Does not access private data or location without consent.
+
+Customizable Check Interval:
+
+Adjust CHECK_INTERVAL (in seconds) to check for updates more or less frequently.
